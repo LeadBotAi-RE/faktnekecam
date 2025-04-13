@@ -1,16 +1,58 @@
-import React from "react";
+'use client';
+
+import React, { useState, useEffect } from "react";
 
 const EarlyAccessCampaign = () => {
-  // Dynamické počítadlo (příklad - propojíte s DB)
-  const remainingSpots = 500 - 189; // 189 přihlášených
-  const campaignEndDate = new Date("2024-09-30T23:59:59");
-  
-  // Výpočet zbývajících dnů
-  const daysLeft = Math.floor((campaignEndDate - new Date()) / (1000 * 60 * 60 * 24));
+  // Dynamické počítadlo
+  const [remainingSpots, setRemainingSpots] = useState(500 - 189);
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+  });
+
+  useEffect(() => {
+    // Výpočet zbývajícího času
+    const calculateTimeLeft = () => {
+      const endDate = new Date("2025-06-30T23:59:59");
+      const now = new Date();
+      const difference = endDate.getTime() - now.getTime();
+      
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+      });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 60000); // Aktualizace každou minutu
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Formulářové handlery
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulace API callu
+    setTimeout(() => {
+      console.log("Email submitted:", email);
+      setSubmitSuccess(true);
+      setIsSubmitting(false);
+      setRemainingSpots(prev => prev - 1);
+      setEmail("");
+    }, 1500);
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      {/* Hero s časovou osou */}
+      {/* Hero sekce */}
       <section className="relative py-28 px-4 text-center border-b border-gray-800">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 to-gray-950 -z-10" />
         
@@ -19,7 +61,7 @@ const EarlyAccessCampaign = () => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
             </svg>
-            Kampaň končí za {daysLeft} dní
+            Kampaň končí za {timeLeft.days} dní {timeLeft.hours}h {timeLeft.minutes}m
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
@@ -29,22 +71,6 @@ const EarlyAccessCampaign = () => {
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
             Přidejte se k <span className="font-semibold text-white">3měsíčnímu exkluzivnímu testování</span> a získejte trvalé výhody jako odměnu.
           </p>
-          
-          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-12">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
-              <div className="text-2xl font-bold text-blue-400">1.7.</div>
-              <div className="text-xs text-gray-400">START</div>
-            </div>
-            <div className="bg-gray-900/50 border border-blue-500 rounded-lg p-4 relative">
-              <div className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs px-1.5 rounded-full">NYNÍ</div>
-              <div className="text-2xl font-bold">{new Date().getDate()}.{new Date().getMonth()+1}.</div>
-              <div className="text-xs text-gray-400">PŘIHLÁŠENÍ</div>
-            </div>
-            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
-              <div className="text-2xl font-bold">30.9.</div>
-              <div className="text-xs text-gray-400">KONEC</div>
-            </div>
-          </div>
           
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-md mx-auto mb-12">
             <div className="flex justify-between text-sm mb-3">
@@ -121,25 +147,39 @@ const EarlyAccessCampaign = () => {
             ))}
           </div>
           
-          <form className="max-w-md mx-auto">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input 
-                type="email" 
-                placeholder="Váš pracovní email" 
-                required
-                className="flex-grow px-5 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
-              />
-              <button 
-                type="submit"
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 whitespace-nowrap"
-              >
-                Přihlásit se
-              </button>
+          {submitSuccess ? (
+            <div className="bg-green-900/50 text-green-400 p-4 rounded-lg mb-6">
+              Úspěšně odesláno! Brzy vám přijde potvrzovací email.
             </div>
-            <p className="mt-4 text-xs text-gray-500">
-              Odesláním souhlasíte s <a href="#" className="text-blue-400 hover:underline">podmínkami beta testování</a>.
-            </p>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Váš pracovní email"
+                  required
+                  className="flex-grow px-5 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 whitespace-nowrap ${
+                    isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:from-blue-500 hover:to-cyan-400'
+                  }`}
+                >
+                  {isSubmitting ? 'Odesílám...' : 'Přihlásit se'}
+                </button>
+              </div>
+              <p className="mt-4 text-xs text-gray-500">
+                Odesláním souhlasíte s{' '}
+                <a href="#" className="text-blue-400 hover:underline">
+                  podmínkami beta testování
+                </a>.
+              </p>
+            </form>
+          )}
         </div>
       </section>
     </div>
